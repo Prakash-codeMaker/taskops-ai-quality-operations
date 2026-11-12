@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+<title id="title">TaskOps architecture</title><desc id="desc">Browser frontend calls Hatchable API routes, which use shared workspace authorization and PostgreSQL, with managed authentication and platform services.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101a20"/><stop offset="1" stop-color="#182c32"/></linearGradient><style>
+text{font-family:Inter,Arial,sans-serif;fill:#edf5f3}.muted{fill:#a7bbb8;font-size:17px}.heading{font-size:24px;font-weight:700}.sub{font-size:15px;fill:#a7bbb8}.box{fill:#1d343a;stroke:#50706f;stroke-width:2}.accent{fill:#254b4c;stroke:#78aaa0;stroke-width:2}.line{stroke:#9ac4b7;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}.tag{fill:#d7e9e2;font-size:13px;font-weight:600}
+</style><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0L9 3L0 6" fill="none" stroke="#9ac4b7" stroke-width="1.5"/></marker></defs>
+<rect width="1200" height="650" rx="26" fill="url(#bg)"/>
+<text x="64" y="72" font-size="15" letter-spacing="3" fill="#92b6a8">TASKOPS / SYSTEM OVERVIEW</text><text x="64" y="116" font-size="34" font-weight="700">Operational workflow architecture</text>
+<rect class="box" x="64" y="180" width="270" height="340" rx="18"/><text class="heading" x="94" y="225">Browser client</text><text class="sub" x="94" y="253">Static HTML · CSS · JavaScript</text>
+<rect class="accent" x="94" y="290" width="210" height="52" rx="10"/><text x="199" y="322" text-anchor="middle">Operations overview</text>
+<rect class="accent" x="94" y="360" width="210" height="52" rx="10"/><text x="199" y="392" text-anchor="middle">Task queue & review</text>
+<rect class="accent" x="94" y="430" width="210" height="52" rx="10"/><text x="199" y="462" text-anchor="middle">Team & evaluations</text>
+<path class="line" marker-end="url(#arrow)" d="M334 350H440"/>
+<rect class="box" x="440" y="180" width="330" height="340" rx="18"/><text class="heading" x="472" y="225">Hatchable API layer</text><text class="sub" x="472" y="253">V8 handlers · HTTPS / JSON</text>
+<rect class="accent" x="472" y="290" width="266" height="52" rx="10"/><text x="605" y="322" text-anchor="middle">Task & workflow routes</text>
+<rect class="accent" x="472" y="360" width="266" height="52" rx="10"/><text x="605" y="392" text-anchor="middle">Review & evaluation routes</text>
+<rect class="accent" x="472" y="430" width="266" height="52" rx="10"/><text x="605" y="462" text-anchor="middle">Workspace / trace / audit</text>
+<path class="line" marker-end="url(#arrow)" d="M770 350H870"/>
+<rect class="box" x="870" y="180" width="266" height="340" rx="18"/><text class="heading" x="900" y="225">Data & services</text><text class="sub" x="900" y="253">Managed platform services</text>
+<rect class="accent" x="900" y="290" width="206" height="52" rx="10"/><text x="1003" y="322" text-anchor="middle">PostgreSQL</text>
+<rect class="accent" x="900" y="360" width="206" height="52" rx="10"/><text x="1003" y="392" text-anchor="middle">Auth & memberships</text>
+<rect class="accent" x="900" y="430" width="206" height="52" rx="10"/><text x="1003" y="462" text-anchor="middle">AI / secrets / jobs</text>
+<rect x="64" y="558" width="1072" height="48" rx="10" fill="#21383b"/><text class="muted" x="88" y="588">Tenant boundaries and workspace authorization are enforced by API handlers and SQL scoping.</text>
+</svg>

@@ -35,6 +35,8 @@ Browser (static HTML / CSS / JavaScript)
    migrations        services / secrets
 ```
 
+![TaskOps architecture](docs/architecture.svg)
+
 ### Repository layout
 
 | Path | Purpose |

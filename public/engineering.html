@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b110f">
+<meta name="description" content="TaskOps engineering notes: architecture, database model, API contracts, workflow semantics, quality scoring and security model.">
+<title>Engineering Notes · TaskOps</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+.docs-wrap{max-width:1180px;margin:auto;padding:30px 34px 55px}.docs-head{padding:26px 0 24px;border-bottom:1px solid var(--border);margin-bottom:22px}.docs-head h1{font-size:30px;letter-spacing:-1px;margin:8px 0}.docs-head p{color:var(--muted);font-size:12px;line-height:1.6;max-width:760px}.docs-actions{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap}.docs-grid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px}.docs-toc{position:sticky;top:18px;align-self:start;border:1px solid var(--border);border-radius:11px;background:#111a2b;padding:14px}.docs-toc strong{font-size:10px;display:block;margin-bottom:10px;color:#dce5f4}.docs-toc a{display:block;color:#8fa0b8;font-size:10px;padding:7px 0}.docs-toc a:hover{color:#a9bbff}.docs-content{min-width:0;display:grid;gap:14px}.docs-card{background:linear-gradient(145deg,#121d30,#10192a);border:1px solid #263449;border-radius:12px;padding:19px}.docs-card h2{font-size:15px;margin:0 0 10px}.docs-card h3{font-size:11px;margin:17px 0 7px;color:#dce5f4}.docs-card p,.docs-card li{font-size:11px;line-height:1.7;color:#a4b2c7}.docs-card ul{padding-left:18px;margin:8px 0}.docs-card code{font:10px var(--mono);color:#b9c9ff;background:#202d45;padding:2px 5px;border-radius:4px}.docs-card pre{white-space:pre-wrap;word-break:break-word;background:#0b1525;border:1px solid #25344a;border-radius:8px;padding:12px;color:#b2c4e3;font:10px/1.6 var(--mono);overflow:auto}.docs-table{width:100%;border-collapse:collapse;margin-top:9px}.docs-table th,.docs-table td{text-align:left;padding:9px;border-bottom:1px solid #27364c;font-size:10px;vertical-align:top}.docs-table th{font:9px var(--mono);color:#8294ae}.docs-table td{color:#b0bfd3}.docs-table td:first-child{font-family:var(--mono);color:#aabaff}.tag{display:inline-block;font:9px var(--mono);padding:4px 6px;border:1px solid #34445e;border-radius:5px;color:#b6c7e2;margin:2px}.docs-callout{padding:12px;border-radius:8px;background:#192743;border:1px solid #33496d;color:#b7c7e4;font-size:10px;line-height:1.7}.docs-footer{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--border);padding-top:15px;color:#7788a0;font-size:9px;margin-top:18px}.docs-footer a{color:#9eafff}
+@media(max-width:760px){.docs-wrap{padding:20px 14px}.docs-grid{grid-template-columns:1fr}.docs-toc{position:static;display:grid;grid-template-columns:repeat(2,1fr);gap:0 10px}.docs-toc strong{grid-column:1/-1}.docs-head h1{font-size:24px}.docs-table{min-width:520px}.docs-card{overflow-x:auto}}
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<div class="topbar">
+  <div class="breadcrumbs"><a href="/" style="color:#a8b6ca">TaskOps</a><b>/</b><strong>Engineering notes</strong></div>
+  <div class="topbar-actions"><span class="environment-chip"><span></span> DEMO DATA</span><a class="button button-quiet button-small" href="/">← Back to dashboard</a></div>
+</div>
+<main class="docs-wrap">
+  <header class="docs-head">
+    <div class="eyebrow">ENGINEERING HANDOFF · CURRENT BUILD</div>
+    <h1>How TaskOps works.</h1>
+    <p>A compact technical walkthrough of the system boundaries, persistence model, API contracts and workflow invariants. This is an engineering demo built around AI-data operations workflows; all seeded people and tasks are synthetic.</p>
+    <div class="docs-actions"><a class="button button-primary" href="/">Open live dashboard ↗</a><a class="button button-secondary" href="/team.html">Team & workspaces ↗</a><a class="button button-secondary" href="/evaluations.html">Quality workbench ↗</a><a class="button button-secondary" href="/integrations.html">Integrations & traces ↗</a><a class="button button-secondary" href="/sample-tasks.csv" download>Sample CSV ↓</a></div>
+  </header>
+  <div class="docs-grid">
+    <nav class="docs-toc" aria-label="On this page"><strong>ON THIS PAGE</strong><a href="#architecture">Architecture</a><a href="#data-model">Data model</a><a href="#api">API surface</a><a href="#workflow">Workflow state machine</a><a href="#rubric">Quality rubric</a><a href="#ingestion">Ingestion contract</a><a href="#security">Security model</a><a href="#testing">Verification</a><a href="#tradeoffs">Trade-offs</a><a href="#collaboration">Collaboration</a><a href="#evaluations">Evaluation engine</a><a href="#observability">Integrations & observability</a></nav>
+    <div class="docs-content">
+      <section class="docs-card" id="architecture">
+        <h2>01 · Architecture</h2>
+        <p>TaskOps is a small full-stack application with a static browser client, HTTP function layer and PostgreSQL as the source of truth. The browser never writes directly to the database.</p>
+        <pre>Browser UI (HTML / CSS / JavaScript)
+          │
+          ├── Signed-in read requests ──→ API functions
+          │                                  │
+          └── Signed-in mutations ───────────┤
+                                         ▼
+                                PostgreSQL
+                         ┌──────────┬──────────┐
+                         │ tasks    │ reviews  │
+                         │ reviewers│ events   │
+                         │ imports  │ indexes  │
+                         └──────────┴──────────┘</pre>
+        <p>The frontend renders server-owned state. Workspace reads and writes require a signed-in end-user session; health and session-introspection endpoints expose no workspace records. The server resolves the active workspace from the authenticated user’s organization membership, never from a browser-supplied workspace ID. Every write is validated by an API handler, persisted to PostgreSQL, and accompanied by an event record.</p>
+        <div class="docs-callout">Design principle: keep task state and review evidence in the database; make the browser a thin operator interface; keep state changes explicit and auditable.</div>
+      </section>
+      <section class="docs-card" id="data-model">
+        <h2>02 · Data model</h2>
+        <table class="docs-table"><thead><tr><th>TABLE</th><th>RESPONSIBILITY</th><th>IMPORTANT INVARIANTS</th></tr></thead><tbody>
+          <tr><td>organizations</td><td>Tenant boundary and billing/administration parent.</td><td>Unique organization slug; no platform-user foreign key.</td></tr>
+          <tr><td>workspaces</td><td>Operational workspace within an organization.</td><td>Unique organization + workspace slug; task data is scoped by workspace UUID.</td></tr>
+          <tr><td>organization_memberships</td><td>Authenticated end-user access and organization role.</td><td>Opaque platform user ID stored as TEXT; unique organization + user; active flag and role constraint.</td></tr>
+          <tr><td>tasks</td><td>Workspace-scoped work item, payload, priority, assignment, state and current score.</td><td>Unique workspace + external ID; constrained status/priority; composite reviewer/workspace FK.</td></tr>
+          <tr><td>reviewers</td><td>Workspace-scoped reviewer profile, specialization, active flag and capacity.</td><td>Unique workspace + email; capacity bounded to 1–100.</td></tr>
+          <tr><td>reviews</td><td>Immutable, workspace-scoped review attempt with dimension scores, rubric version and verdict.</td><td>Composite task/workspace and reviewer/workspace FKs; five scores constrained to 1–5.</td></tr>
+          <tr><td>task_events</td><td>Append-only, workspace-scoped event history for creation, assignment, reviews and transitions.</td><td>Composite task/workspace FK; actor, action, before/after status and JSONB metadata.</td></tr>
+          <tr><td>import_batches</td><td>Workspace-scoped import-level counts for submitted, inserted, duplicate and rejected rows.</td><td>One row per submitted batch; row-level errors returned by the API.</td></tr>
+          <tr><td>workspace_memberships / organization_invitations</td><td>Workspace access, role assignment and expiring email-bound invitations.</td><td>Membership rows are own-scoped; invitations are single-use, seven-day and bound to the authenticated email.</td></tr>
+          <tr><td>task_schemas / rubric_versions / gold_examples</td><td>Versioned task contracts, scoring rules and calibration references.</td><td>Workspace-scoped, immutable versions by name; each evaluation stores the versions it used.</td></tr>
+          <tr><td>evaluation_runs / evaluation_results</td><td>Asynchronous deterministic, AI or hybrid evaluation with per-task evidence.</td><td>Idempotent run/task result key; composite run/task workspace FKs; evaluation does not approve tasks.</td></tr>
+          <tr><td>integration_tokens / trace_ingest_batches / agent_traces</td><td>Workspace-scoped ingest keys, async trace batches and normalized spans.</td><td>Only SHA-256 token hashes are stored; spans unique by workspace + trace + span; sensitive attributes are redacted before queue persistence.</td></tr>
+        </tbody></table>
+        <p>Every operational record is scoped to a workspace. Existing synthetic records were backfilled into the <code>Atlas Workspace</code> starter dataset. Signed-in users can create workspaces, switch among memberships, invite teammates, change roles and remove members subject to last-owner protection. Each new workspace receives a default versioned rubric.</p>
+      </section>
+      <section class="docs-card" id="api">
+        <h2>03 · API surface</h2>
+        <table class="docs-table"><thead><tr><th>METHOD / ROUTE</th><th>ACCESS</th><th>CONTRACT</th></tr></thead><tbody>
+          <tr><td>GET /api/health</td><td>public</td><td>Service and database health probe.</td></tr>
+          <tr><td>GET /api/overview</td><td>user</td><td>Membership-derived workspace KPIs, seven-day trend, queues and recent events.</td></tr>
+          <tr><td>GET /api/tasks</td><td>user</td><td>Workspace-scoped search, status/project filters and bounded pagination.</td></tr>
+          <tr><td>GET /api/tasks/:id</td><td>user</td><td>Task detail, review attempts and latest event history.</td></tr>
+          <tr><td>POST /api/tasks/create</td><td>user</td><td>Role-gated, workspace-scoped task creation and a <code>task_created</code> event.</td></tr>
+          <tr><td>POST /api/tasks/import</td><td>user</td><td>Role-gated, workspace-scoped import; duplicate identity is unique within the workspace.</td></tr>
+          <tr><td>POST /api/tasks/:id/assign</td><td>user</td><td>Owner/admin/quality-lead gate plus workspace-aware serialized capacity check, assignment, status change and event.</td></tr>
+          <tr><td>POST /api/tasks/:id/review</td><td>user</td><td>Owner/admin/reviewer/quality-lead gate plus workspace-scoped weighted scoring and review evidence.</td></tr>
+          <tr><td>POST /api/tasks/:id/transition</td><td>user</td><td>Owner/admin/quality-lead gate and workspace-scoped guarded state transition.</td></tr>
+          <tr><td>GET /api/reviewers</td><td>user</td><td>Roster, open workload and average review score.</td></tr>
+          <tr><td>GET /api/audit</td><td>user</td><td>Latest event records joined to task context.</td></tr>
+          <tr><td>GET /api/me</td><td>public</td><td>Current end-user session introspection.</td></tr>
+          <tr><td>GET/POST /api/workspaces</td><td>user</td><td>List accessible workspaces and create a workspace within the active organization.</td></tr>
+          <tr><td>GET /api/org/members</td><td>user</td><td>Workspace and organization member directories.</td></tr>
+          <tr><td>GET/POST /api/org/invitations</td><td>user</td><td>Create/list seven-day, email-bound invitations; use a copyable link if provider delivery is unavailable.</td></tr>
+          <tr><td>POST /api/org/invitations/accept</td><td>user</td><td>Single-use token acceptance; authenticated email must match the invitation.</td></tr>
+          <tr><td>GET/POST /api/schemas, /api/rubrics, /api/gold-examples</td><td>user</td><td>Versioned JSON schemas, rubric policies and trusted calibration examples.</td></tr>
+          <tr><td>GET/POST /api/evaluations, GET /api/evaluations/:id</td><td>user</td><td>Queue evaluations and inspect run/task results and evidence.</td></tr>
+          <tr><td>POST /api/jobs/run-evaluation</td><td>scheduler</td><td>Idempotent evaluation worker; deterministic, optional AI judge or hybrid fallback.</td></tr>
+          <tr><td>POST /api/integrations/keys, DELETE /api/integrations/keys/:id</td><td>user</td><td>Create one-time bearer tokens and revoke them; stored credentials are hashed.</td></tr>
+          <tr><td>POST /api/ingest/traces</td><td>public + bearer key</td><td>Accept bounded OTLP JSON/custom spans, redact sensitive attributes, and queue async processing.</td></tr>
+          <tr><td>GET /api/traces, GET /api/exports</td><td>user</td><td>Workspace-scoped trace explorer and JSON exports for tasks/evaluations/traces.</td></tr>
+        </tbody></table>
+        <p><span class="tag">public</span> is limited to health and current-session introspection. <span class="tag">user</span> means the request must have a signed-in TaskOps end-user session. These are separate from project collaborators.</p>
+      </section>
+      <section class="docs-card" id="workflow">
+        <h2>04 · Workflow state machine</h2>
+        <pre>queued ──assign──→ in_review
+                       │
+              ┌────────┼────────┐
+              ▼        ▼
+        needs_revision  rejected
+              │
+              └──re-queue──→ queued
+
+A passing review submission (not the generic transition API)
+is the only path from in_review to awaiting_approval:
+in_review ──score ≥ 85──→ awaiting_approval ──approve──→ approved
+           approved
+
+Allowed transitions are enforced server-side.
+approved and rejected are terminal in this demo.</pre>
+        <p>Review submission does not itself approve a task. A passing review moves the task to <code>awaiting_approval</code>; a separate approval action is required. A revision request re-enters the revision queue, and re-queueing increments the revision counter. The API rejects stale concurrent transitions when the current status no longer matches the status read before the update.</p>
+      </section>
+      <section class="docs-card" id="rubric">
+        <h2>05 · Quality scoring contract</h2>
+        <p>Each dimension is rated from 1 to 5. Weighted score is computed as the weighted sum divided by 5, multiplied by 100.</p>
+        <pre>score = (
+  correctness             × 0.30 +
+  completeness            × 0.20 +
+  instruction_adherence   × 0.20 +
+  format_validity         × 0.15 +
+  evidence_quality        × 0.15
+) / 5 × 100</pre>
+        <table class="docs-table"><thead><tr><th>VERDICT</th><th>RULE</th><th>NEXT STATE</th></tr></thead><tbody>
+          <tr><td>pass</td><td>Score ≥ 85 and every dimension ≥ 3.</td><td>awaiting_approval</td></tr>
+          <tr><td>revise</td><td>Score 50–84.99 with no critical dimension below 2.</td><td>needs_revision</td></tr>
+          <tr><td>fail</td><td>Score below 50 or any dimension below 2.</td><td>needs_revision (explicit reviewer/lead action still decides final rejection).</td></tr>
+        </tbody></table>
+        <p>The human-review rubric remains deterministic. The separate evaluation engine supports versioned JSON Schema checks, a versioned rubric snapshot, gold-example context and per-task evidence. Deterministic validation needs no provider key. Hybrid mode uses an independent LLM judge when configured and falls back to deterministic checks when unavailable; AI-only mode fails clearly without a provider. Evaluation results never change task workflow state or approve work.</p>
+      </section>
+      <section class="docs-card" id="ingestion">
+        <h2>06 · Data ingestion</h2>
+        <p>The UI accepts CSV and JSON arrays up to 100 records per batch. CSV parsing supports quoted cells and escaped quotes. API validation is repeated server-side; client checks are not trusted.</p>
+        <p>CSV fields: <code>external_id,title,description,project,queue,task_type,priority,payload</code>. The <code>payload</code> field may be omitted or contain JSON. Missing external IDs are generated for the batch. Existing external IDs are skipped idempotently rather than overwriting work.</p>
+        <pre>curl -X POST /api/tasks/import \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source": "sample.csv",
+    "records": [{
+      "external_id": "DEMO-001",
+      "title": "Check source grounding",
+      "project": "Atlas Evaluation",
+      "priority": 4,
+      "payload": {"source": "synthetic"}
+    }]
+  }'</pre>
+        <p>Response includes <code>submitted</code>, <code>inserted</code>, <code>duplicates</code>, <code>rejected</code> and row-numbered <code>errors</code>. Trace ingestion is a separate bearer-key endpoint: it accepts up to 250 spans and 750 KB per batch, redacts secrets/prompt/PII-like attributes before storage, returns HTTP 202, and normalizes OTLP JSON or custom spans asynchronously.</p>
+      </section>
+      <section class="docs-card" id="security">
+        <h2>07 · Security model</h2>
+        <ul><li>Workspace data reads and mutations declare <code>access = "user"</code>; only health and session introspection remain public.</li><li>The server resolves the workspace from <code>req.user.id</code> and an active organization membership; the browser cannot choose a workspace ID.</li><li>Membership roles are stored as an opaque-user-ID <code>TEXT</code> relation: owner, admin, member, reviewer, quality lead or auditor. Write routes enforce role allowlists.</li><li>Every operational record is scoped to a workspace. Composite foreign keys prevent cross-workspace task/reviewer, review/task and event/task relationships.</li><li>Reviewer assignments serialize capacity checks and record the event atomically.</li><li>Reviews and task events reject updates/deletes, including parent-row cascades.</li><li>SQL uses parameterized values; payloads are size-bounded and stored as JSONB. Login uses platform-managed email codes/passkeys.</li><li>Current records are synthetic; no client data or real customer information is present.</li></ul>
+        <div class="docs-callout">The v18 MVP includes collaboration, linked reviewer workflows, deterministic evaluation, hybrid fallback and bearer-key trace ingestion. It is still a private prototype, not a production-certified multi-tenant SaaS: complete real-browser email/passkey and legitimate invitation acceptance; connect Anthropic for semantic AI judging; change project visibility to Public before external users or trace senders can reach it; add rate limits/quotas, retention/deletion, independent tamper-evident audit retention, backups, deeper database row isolation and production monitoring before customer data is used.</div>
+      </section>
+      <section class="docs-card" id="testing">
+        <h2>08 · Verification performed</h2>
+        <table class="docs-table"><thead><tr><th>CHECK</th><th>RESULT</th><th>OBSERVED</th></tr></thead><tbody>
+          <tr><td>Health + database</td><td><span style="color:#6ddbb2">PASS</span></td><td>HTTP 200; database connected.</td></tr>
+          <tr><td>Workspace read access</td><td><span style="color:#6ddbb2">PASS</span></td><td>Anonymous callers receive 401 on overview, tasks, task detail, reviewers and audit; the signed-in test tier receives 200.</td></tr>
+          <tr><td>Anonymous mutation</td><td><span style="color:#6ddbb2">PASS</span></td><td>HTTP 401 for unauthenticated task creation.</td></tr>
+          <tr><td>Create → assign → review → approve</td><td><span style="color:#6ddbb2">PASS</span></td><td>201 → 200 → 201 (94.5 pass) → 200.</td></tr>
+          <tr><td>Import classification</td><td><span style="color:#6ddbb2">PASS</span></td><td>One inserted, one duplicate, one invalid row correctly rejected.</td></tr>
+          <tr><td>Illegal state transition</td><td><span style="color:#6ddbb2">PASS</span></td><td>HTTP 409; terminal approved state cannot be reopened.</td></tr>
+          <tr><td>Append-only review/audit guard</td><td><span style="color:#6ddbb2">PASS</span></td><td>Database rejected update attempts on both <code>reviews</code> and <code>task_events</code>.</td></tr>
+          <tr><td>Reviewer-capacity guard</td><td><span style="color:#6ddbb2">PASS</span></td><td>Capacity-one test rejected the second assignment; forced rollback left task rows, reviewer capacity and event counts unchanged.</td></tr>
+          <tr><td>Workspace backfill</td><td><span style="color:#6ddbb2">PASS</span></td><td>Atlas Workspace retains all 12 tasks, 6 reviewers, 4 reviews and 12 events; no rows were lost.</td></tr>
+          <tr><td>Cross-workspace isolation</td><td><span style="color:#6ddbb2">PASS</span></td><td>Two fresh tenant workspaces were distinct; identical external IDs were accepted in each; a task could not reference the other workspace’s reviewer.</td></tr>
+          <tr><td>Last-owner protection</td><td><span style="color:#6ddbb2">PASS</span></td><td>Removing the only active owner returned HTTP 409 and left the organization intact. Full role-matrix testing still requires a second signed-in account.</td></tr>
+          <tr><td>Workspace collaboration</td><td><span style="color:#6ddbb2">PASS</span></td><td>Workspace create/list/switch returned distinct memberships; last-owner removal was rejected with HTTP 409.</td></tr>
+          <tr><td>Reviewer management</td><td><span style="color:#6ddbb2">PASS</span></td><td>Linked reviewer profile created from a workspace Reviewer membership; task assignment succeeded; capacity/specialty update returned 200; deactivation with open work returned 409.</td></tr>
+          <tr><td>Reviewer route permissions</td><td><span style="color:#6ddbb2">PASS</span></td><td>In a synthetic reviewer-role session: create task 403; review own assigned task 201; review unassigned task 403; attempt to transition/approve task 403.</td></tr>
+          <tr><td>Reviewer role lifecycle</td><td><span style="color:#6ddbb2">PASS</span></td><td>Open-work downgrade/removal returns 409; idle reviewer can be downgraded and profile deactivated, then re-registered with the same profile ID; promotion to Owner/Admin preserves the active profile and assigned work.</td></tr>
+          <tr><td>Member removal safety</td><td><span style="color:#6ddbb2">PASS</span></td><td>Workspace downgrade, workspace removal and organization removal all return 409 while the reviewer owns open tasks.</td></tr>
+          <tr><td>Invitation lifecycle</td><td><span style="color:#6ddbb2">PASS</span></td><td>Invitation persisted; wrong-email acceptance returned 404; scoped revocation returned 200. Free-plan email delivery was denied and a copyable link was returned.</td></tr>
+          <tr><td>Deterministic evaluation</td><td><span style="color:#6ddbb2">PASS</span></td><td>Valid task completed with rubric/schema snapshots and evidence; malformed payload scored 81.6 and was marked revise with exact schema errors.</td></tr>
+          <tr><td>Hybrid AI fallback</td><td><span style="color:#6ddbb2">PASS</span></td><td>No Anthropic key was connected; hybrid run used deterministic fallback and recorded <code>provider_not_connected</code>.</td></tr>
+          <tr><td>Trace ingest and redaction</td><td><span style="color:#6ddbb2">PASS</span></td><td>Scoped bearer key accepted a span (202); worker stored it; authorization and prompt attributes were persisted as <code>[REDACTED]</code>.</td></tr>
+          <tr><td>Workspace exports</td><td><span style="color:#6ddbb2">PASS</span></td><td>Task, evaluation and trace JSON exports each returned HTTP 200 with workspace-scoped records.</td></tr>
+        </tbody></table>
+        <p>These checks were executed against deployed API handlers and synthetic membership fixtures. They do not replace a real browser session with a second external account. Email-code/passkey sign-in and a legitimate recipient completing the invitation link still require browser-and-mailbox verification.</p>
+      </section>
+      <section class="docs-card" id="tradeoffs">
+        <h2>09 · Engineering trade-offs and next steps</h2>
+        <ul><li><strong>Current:</strong> authenticated workspace bootstrap, membership-derived tenant scoping, composite cross-workspace foreign keys, basic role allowlists, serialized reviewer assignment, append-only review/event records, simple status workflow and synthetic seed data.</li><li><strong>Current:</strong> team invitations/member administration, workspace switching, default rubric seeding, versioned schema/rubric/gold data, deterministic and hybrid evaluation runs, scoped trace keys, async trace ingestion, redacted trace storage, AI usage and workspace JSON exports.</li><li><strong>Next:</strong> real browser/mailbox sign-in acceptance, provider setup for AI judging, production rate limiting, retention/deletion, stronger operational-table row policies, dashboards/alerts, automated test suite and connector SDK packaging.</li><li><strong>Scale:</strong> scheduler-backed async jobs are sufficient for the current prototype. Replace with a dedicated durable queue and columnar analytics store only when throughput warrants it; retain bounded reads and batch imports.</li><li><strong>Observability:</strong> trace ingestion and basic workspace exports are implemented. Still add service-level dashboards, alerting, retention controls, and larger-scale analytics before production.</li></ul>
+      </section>
+      <section class="docs-card" id="collaboration">
+        <h2>10 · Collaboration and workspace management</h2>
+        <p>Organizations can contain multiple workspaces. Authenticated users receive workspace memberships; the active workspace is resolved server-side from the user's identity and membership, while a requested workspace ID is only a selection hint that must pass a membership check.</p>
+        <ul><li>Workspace switcher and create-workspace route.</li><li>Organization member and active-workspace member directories.</li><li>Organization roles (owner/admin/member) are separate from workspace roles (owner/admin/member/reviewer/quality lead/auditor); changing one does not silently change the other.</li><li>Workspace role downgrade from Reviewer/Quality Lead is blocked while that member's reviewer profile has open tasks; after reassignment the profile is deactivated.</li><li>Reviewer profiles are linked to active workspace members, with capacity/specialty updates and safe deactivation. Reviewers may only submit reviews for tasks assigned to their own profile.</li><li>Workspace-only member removal and organization-wide member removal are separate actions, with owner/admin restrictions and last-owner protection.</li><li>Seven-day invitations with single-use, SHA-256-hashed tokens bound to the invited email; invitations can be revoked.</li><li>Free-tier email restrictions may prevent delivery. In that case the API returns a copyable invitation URL.</li></ul>
+      </section>
+      <section class="docs-card" id="evaluations">
+        <h2>11 · Evaluation engine</h2>
+        <p>Task schemas, rubric versions and gold examples are workspace-scoped. An evaluation run snapshots the active rubric, relevant task schemas and gold examples at creation time, then processes tasks asynchronously.</p>
+        <ul><li>Deterministic mode validates task context, required JSON fields, supported property types, enums, string length bounds and additional-property rules.</li><li>AI mode uses an independent evaluator; hybrid mode blends deterministic checks and the AI judge. Model output is validated and never approves or changes a task.</li><li>Without an Anthropic API key, hybrid mode records <code>provider_not_connected</code> and falls back to deterministic evidence; AI-only runs fail clearly.</li><li>Each result stores score, verdict, dimensions, rationale, evidence, model/evaluator metadata and the rubric/schema versions.</li></ul>
+      </section>
+      <section class="docs-card" id="observability">
+        <h2>12 · Integrations and observability</h2>
+        <p>Workspace owners/admins/quality leads can issue and revoke scoped bearer keys. The public trace receiver requires a valid <code>traces:write</code> token, accepts OTLP JSON or custom span batches, enforces batch bounds, redacts sensitive key/value attributes before queue persistence and schedules normalized storage.</p>
+        <ul><li>Trace batches return HTTP 202 and are processed by a scheduler worker; spans are unique by workspace + trace ID + span ID.</li><li>Trace explorer shows recent spans and batch state; task, evaluation and trace JSON exports are workspace-scoped and capped at 500 rows per request.</li><li>AI usage is filtered to active members of the workspace. AI usage and model judging require a provider setup; no provider key is currently connected.</li><li>The project is still on PostgreSQL and Hatchable scheduler infrastructure; a dedicated ClickHouse store, external S3-compatible payload archive and enterprise OTel collector are future scale steps, not present capabilities.</li></ul>
+      </section>
+    </div>
+  </div>
+  <footer class="docs-footer"><span>TaskOps · Engineering handoff</span><span><a href="/">Dashboard</a> · <a href="/api/health">API health</a></span></footer>
+</main>
+</body>
+</html>

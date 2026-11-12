@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b110f">
+  <meta name="description" content="TaskOps — auditable task intake, review and quality control for AI data operations.">
+  <title>TaskOps — AI Data Operations</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    :focus-visible{outline:2px solid #91a8ff;outline-offset:3px}
+    ::selection{background:#627de8;color:#fff}
+    .button,.icon-button,.nav-link,.text-button{transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease}
+    .button:hover:not(:disabled){transform:translateY(-1px)}
+    .button-primary:hover:not(:disabled){box-shadow:0 9px 24px rgba(105,132,255,.22)}
+    .kpi-card,.panel{transition:border-color .18s ease,background .18s ease}
+    .kpi-card:hover,.panel:hover{border-color:#354966}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:#829aff;box-shadow:0 0 0 3px rgba(112,139,255,.14)}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+  </style>
+  <link rel="stylesheet" href="/theme.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="TaskOps home">
+      <span class="brand-mark" aria-hidden="true">T</span>
+      <span class="brand-copy"><strong>taskops</strong><small>DATA OPERATIONS</small></span>
+    </a>
+    <div class="workspace-switch">
+      <span class="workspace-icon" id="workspace-icon">A</span>
+      <span><strong id="workspace-name">Loading workspace…</strong><small id="workspace-subtitle">Organization workspace</small></span>
+      <select id="workspace-select" class="workspace-select" aria-label="Switch workspace"><option value="">Loading…</option></select>
+    </div>
+    <nav class="primary-nav" aria-label="Main navigation">
+      <p class="nav-label">WORKSPACE</p>
+      <button class="nav-link active" data-view="overview"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></span>Overview</button>
+      <button class="nav-link" data-view="queue"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></span>Task queue <span class="nav-count" id="nav-open-count">—</span></button>
+      <button class="nav-link" data-view="reviewers"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.4-4.6 5.5-4.6s4.9 1.6 5.5 4.6"/><path d="M16 5.3a3.2 3.2 0 0 1 0 6.1M17 14.7c2.2.5 3.4 1.9 3.8 4.3"/></svg></span>Reviewers</button>
+      <button class="nav-link" data-view="audit"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/></svg></span>Audit log</button>
+      <a class="nav-link nav-link-anchor" href="/team.html"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.5-3 2.3-4.6 5.5-4.6 2.1 0 3.6.7 4.5 2.1"/><path d="M17.5 8v7M14 11.5h7"/></svg></span>Team & workspaces</a>
+      <p class="nav-label nav-label-spaced">SYSTEM</p>
+      <button class="nav-link" data-view="rubric"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></span>Quality rubric</button>
+      <a class="nav-link nav-link-anchor" href="/evaluations.html"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/><path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></svg></span>Evaluation workbench</a>
+      <a class="nav-link nav-link-anchor" href="/integrations.html"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></span>Integrations & traces</a>
+      <a class="nav-link nav-link-anchor" href="/engineering.html"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 8.5-5 3.5 5 3.5M15.5 8.5l5 3.5-5 3.5M13.5 4l-3 16"/></svg></span>Engineering notes ↗</a>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-status" id="sidebar-status" data-state="checking"><span class="status-dot"></span><span id="system-status-label">Checking database…</span><span class="status-pulse"></span></div>
+    <div class="sidebar-profile">
+      <div class="avatar avatar-violet" id="profile-avatar">—</div>
+      <div class="profile-copy"><strong id="profile-name">Workspace member</strong><small id="workspace-role">Workspace role</small></div>
+      <button class="icon-button small" id="profile-menu" aria-label="Sign out">↗</button>
+    </div>
+  </aside>
+
+  <main class="main-area">
+    <header class="topbar">
+      <div class="breadcrumbs"><span>Workspace</span><b>/</b><strong id="breadcrumb-current">Overview</strong></div>
+      <div class="topbar-actions">
+        <span class="environment-chip"><span></span><span id="environment-label">DEMO DATA</span></span>
+        <button class="icon-button" id="help-button" title="About this demo" aria-label="About this demo">?</button>
+        <a class="button button-quiet button-small" href="/login?next=%2F" id="sign-in-link">Sign in to access <span>↗</span></a>
+      </div>
+    </header>
+
+    <div class="content-wrap">
+      <section class="view-section active" id="view-overview">
+        <div class="page-heading">
+          <div class="page-heading-copy"><div class="eyebrow" id="today-label">LIVE OPERATIONS</div><h1>AI data operations, <span>under control.</span></h1><p>One clear view of task throughput, review quality and team capacity across your workspace.</p></div>
+          <div class="heading-actions"><button class="button button-secondary" id="open-import"><span class="button-plus">＋</span> Import data</button><button class="button button-primary" id="open-create"><span>＋</span> New task</button></div>
+        </div>
+        <div class="section-caption"><span>WORKSPACE HEALTH</span><span>Live operational snapshot</span></div>
+        <div class="kpi-grid">
+          <article class="kpi-card"><div class="kpi-top"><span>Total tasks</span><span class="kpi-icon icon-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5l8 4.5 8-4.5"/></svg></span></div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-foot"><span class="trend trend-neutral" id="kpi-created">—</span><span>created in 24h</span></div></article>
+          <article class="kpi-card"><div class="kpi-top"><span>Open review work</span><span class="kpi-icon icon-cyan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/></svg></span></div><div class="kpi-value" id="kpi-active">—</div><div class="kpi-foot"><span class="kpi-muted" id="kpi-in-review">— in review</span><span>· <span id="kpi-revision">—</span> need revision</span><span>· <span id="kpi-awaiting">—</span> awaiting approval</span></div></article>
+          <article class="kpi-card"><div class="kpi-top"><span>Average quality</span><span class="kpi-icon icon-violet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16a8 8 0 1 1 16 0"/><path d="m12 13 4-4M7 18h10"/></svg></span></div><div class="kpi-value"><span id="kpi-quality">—</span><small class="value-unit">/100</small></div><div class="kpi-foot"><span class="trend trend-positive" id="kpi-rubric-version">Active rubric</span><span>weighted score</span></div></article>
+          <article class="kpi-card"><div class="kpi-top"><span>Approval rate</span><span class="kpi-icon icon-green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span></div><div class="kpi-value"><span id="kpi-approval-rate">—</span><small class="value-unit">%</small></div><div class="kpi-foot"><span class="kpi-muted" id="kpi-completed">— completed</span><span>approved / decided</span></div></article>
+        </div>
+
+        <div class="overview-grid">
+          <article class="panel throughput-panel">
+            <div class="panel-heading"><div><h2>Throughput overview</h2><p>Created vs. approval decisions recorded · last 7 days</p></div><div class="legend"><span><i class="legend-dot dot-intake"></i>Created</span><span><i class="legend-dot dot-complete"></i>Decided</span></div></div>
+            <div class="chart-wrap" role="img" aria-label="Daily tasks created and approval decisions over the last seven days"><div class="y-axis-labels" id="throughput-y-axis" aria-hidden="true"><span>—</span><span>—</span><span>—</span><span>—</span><span>0</span></div><div class="chart-main"><div class="chart-grid-lines"><i></i><i></i><i></i><i></i><i></i></div><div class="chart-columns" id="throughput-chart"></div><div class="x-axis-labels" id="throughput-labels"></div></div></div>
+            <div class="chart-caption"><span><b class="caption-dot"></b>Created and decided in this workspace</span><span id="chart-total">— tasks tracked</span></div>
+          </article>
+          <article class="panel quality-panel">
+            <div class="panel-heading"><div><h2>Task status mix</h2><p>Current task outcomes</p></div><span class="panel-menu">•••</span></div>
+            <div class="quality-content"><div class="donut-wrap"><div class="donut" id="quality-donut"><div class="donut-center"><strong id="donut-total">—</strong><small>tasks</small></div></div></div><div class="quality-legend" id="quality-legend"></div></div>
+            <div class="quality-footer"><span>Decision quality</span><strong id="quality-footer-value">—% approved</strong></div>
+          </article>
+        </div>
+
+        <div class="lower-grid">
+          <article class="panel queue-preview-panel">
+            <div class="panel-heading"><div><h2>Priority work queue</h2><p>Tasks that need attention now</p></div><button class="text-button" data-go-view="queue">View all tasks <span>→</span></button></div>
+            <div class="table-scroll"><table class="data-table"><thead><tr><th>TASK</th><th>PROJECT / QUEUE</th><th>PRIORITY</th><th>STATUS</th><th>QUALITY</th></tr></thead><tbody id="overview-task-rows"><tr><td colspan="5" class="empty-cell">Loading operational data…</td></tr></tbody></table></div>
+          </article>
+          <article class="panel activity-panel">
+            <div class="panel-heading"><div><h2>Activity stream</h2><p>Recent system events</p></div><button class="icon-button small" data-go-view="audit" aria-label="View audit log">↗</button></div>
+            <div class="activity-list" id="overview-activity"><div class="empty-state-small">Loading activity…</div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view-section" id="view-queue">
+        <div class="page-heading compact-heading"><div><div class="eyebrow">OPERATIONS / TASK MANAGEMENT</div><h1>Task <span>queue</span></h1><p>Prioritize, assign and move work through quality review.</p></div><div class="heading-actions"><button class="button button-secondary" id="queue-import">Import data</button><button class="button button-primary" id="queue-create">＋ New task</button></div></div>
+        <div class="panel queue-panel">
+          <div class="queue-toolbar"><div class="search-box"><span>⌕</span><input id="task-search" type="search" placeholder="Search task ID or title…"><kbd>⌘ K</kbd></div><select id="status-filter" aria-label="Filter by status"><option value="">All statuses</option><option value="queued">Queued</option><option value="in_review">In review</option><option value="awaiting_approval">Awaiting approval</option><option value="needs_revision">Needs revision</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select><select id="project-filter" aria-label="Filter by project"><option value="">All projects</option></select><button class="button button-secondary button-small" id="refresh-tasks">↻ Refresh</button></div>
+          <div class="table-scroll"><table class="data-table queue-data-table"><thead><tr><th><input type="checkbox" aria-label="Select all tasks" disabled></th><th>TASK</th><th>PROJECT / QUEUE</th><th>ASSIGNEE</th><th>PRIORITY</th><th>STATUS</th><th>QUALITY</th><th>UPDATED</th><th></th></tr></thead><tbody id="task-rows"><tr><td colspan="9" class="empty-cell">Loading tasks…</td></tr></tbody></table></div>
+          <div class="table-footer"><span id="pagination-summary">—</span><div class="pagination-controls"><button class="icon-button small" id="page-prev" disabled>←</button><span id="page-current">1</span><button class="icon-button small" id="page-next" disabled>→</button></div></div>
+        </div>
+      </section>
+
+      <section class="view-section" id="view-reviewers">
+        <div class="page-heading compact-heading"><div><div class="eyebrow">OPERATIONS / TEAM CAPACITY</div><h1>Reviewer <span>roster</span></h1><p>Capacity, specialization and current workload across your review pods.</p></div><div class="heading-actions"><span class="read-only-chip">LIVE CAPACITY</span></div></div>
+        <div class="reviewer-summary" id="reviewer-summary"></div>
+        <div class="reviewer-grid" id="reviewer-grid"><div class="panel empty-cell">Loading reviewer roster…</div></div>
+      </section>
+
+      <section class="view-section" id="view-audit">
+        <div class="page-heading compact-heading"><div><div class="eyebrow">GOVERNANCE / TRACEABILITY</div><h1>Audit <span>log</span></h1><p>Immutable event-style history of task creation, assignment, review and decisions.</p></div><div class="heading-actions"><span class="read-only-chip">APPEND-ONLY EVENTS</span></div></div>
+        <div class="panel audit-panel"><div class="panel-heading"><div><h2>Event history</h2><p>Most recent 100 recorded events</p></div><button class="button button-secondary button-small" id="refresh-audit">↻ Refresh</button></div><div id="audit-list" class="audit-list"><div class="empty-cell">Loading audit history…</div></div></div>
+      </section>
+
+      <section class="view-section" id="view-rubric">
+        <div class="page-heading compact-heading"><div><div class="eyebrow">QUALITY SYSTEM / POLICY</div><h1>Quality <span>rubric</span></h1><p>The active versioned scoring contract shared by human reviews and evaluation runs.</p></div><span class="rubric-version" id="rubric-version-chip">VERSION 1</span></div>
+        <div class="rubric-grid"><article class="panel rubric-main"><div class="panel-heading"><div><h2>Weighted scoring model</h2><p>Scores are normalized to a 0–100 scale.</p></div><span class="read-only-chip">VERSIONED CONTRACT</span></div><div class="rubric-rows"><div class="rubric-row" data-rubric-key="correctness"><div><strong>Correctness</strong><small>Factual and logical correctness</small></div><b>30%</b><div class="weight-track"><i style="width:30%"></i></div></div><div class="rubric-row" data-rubric-key="completeness"><div><strong>Completeness</strong><small>Coverage of all requested elements</small></div><b>20%</b><div class="weight-track"><i style="width:20%"></i></div></div><div class="rubric-row" data-rubric-key="instruction_adherence"><div><strong>Instruction adherence</strong><small>Compliance with constraints and intent</small></div><b>20%</b><div class="weight-track"><i style="width:20%"></i></div></div><div class="rubric-row" data-rubric-key="format_validity"><div><strong>Format validity</strong><small>Schema, formatting and output contract</small></div><b>15%</b><div class="weight-track"><i style="width:15%"></i></div></div><div class="rubric-row" data-rubric-key="evidence_quality"><div><strong>Evidence quality</strong><small>Traceability and support for claims</small></div><b>15%</b><div class="weight-track"><i style="width:15%"></i></div></div></div></article><article class="panel rubric-policy"><div class="panel-heading"><div><h2>Decision policy</h2><p>How scores map to workflow states</p></div></div><div class="policy-rule"><span class="policy-dot dot-pass"></span><div><strong id="rubric-pass-rule">Pass ≥ 85</strong><p id="rubric-pass-note">Every dimension must also be at least 3/5. Moves to approval.</p></div></div><div class="policy-rule"><span class="policy-dot dot-revise"></span><div><strong>Revise 50–84.99</strong><p>Returns to the revision queue with reviewer feedback.</p></div></div><div class="policy-rule"><span class="policy-dot dot-fail"></span><div><strong>Fail below 50 or critical gap</strong><p id="rubric-fail-note">Any dimension below 2/5 triggers a fail verdict and revision.</p></div></div><div class="policy-note"><strong>Human decisions stay auditable</strong><p>Human scores are reproducible against the saved rubric version. Optional model-assisted evaluations are separate; they never approve or transition a task.</p></div></article></div>
+      </section>
+
+      <section class="architecture-section" id="architecture"><div class="architecture-copy"><span class="eyebrow">BUILT FOR REVIEW</span><strong>Operational rigor, not just a dashboard.</strong><span>Typed ingestion · Postgres persistence · Controlled state machine · Versioned rubric · Event traceability</span></div><a href="/api/health" target="_blank" rel="noreferrer">API health <span>↗</span></a></section>
+      <footer class="footer"><span>TaskOps · Portfolio engineering demo</span><span>All sample records are synthetic · <a href="/api/health" target="_blank" rel="noreferrer">API status</a></span></footer>
+    </div>
+  </main>
+</div>
+
+<dialog class="modal-dialog" id="create-dialog">
+  <form id="create-form" class="modal-card">
+    <div class="modal-heading"><div><span class="eyebrow">WORK INTAKE</span><h2>Create a task</h2><p>Add a new unit of work to the operations queue.</p></div><button type="button" class="icon-button close-dialog" data-close="create-dialog" aria-label="Close">×</button></div>
+    <div class="form-grid"><label class="field field-full">Task title<input name="title" required minlength="3" maxlength="180" placeholder="e.g. Verify factual consistency in model response"></label><label class="field">External ID<input name="external_id" maxlength="64" placeholder="Optional unique ID"></label><label class="field">Project<input name="project" maxlength="80" value="Atlas Evaluation" required></label><label class="field">Queue<input name="queue" maxlength="80" value="General QA" required></label><label class="field">Task type<select name="task_type"><option value="classification">Classification</option><option value="pairwise_comparison">Pairwise comparison</option><option value="schema_validation">Schema validation</option><option value="safety_review">Safety review</option><option value="grounded_summary">Grounded summary</option><option value="code_reasoning">Code reasoning</option><option value="other">Other</option></select></label><label class="field">Priority<select name="priority"><option value="1">P1 · Low</option><option value="2">P2 · Normal</option><option value="3" selected>P3 · Medium</option><option value="4">P4 · High</option><option value="5">P5 · Urgent</option></select></label><label class="field field-full">Description<textarea name="description" rows="2" maxlength="2000" placeholder="What should the reviewer verify?"></textarea></label><label class="field field-full">Task payload (JSON)<textarea name="payload" rows="4" spellcheck="false">{}</textarea><small>Use synthetic examples only. Maximum 12 KB.</small></label></div>
+    <div class="modal-footer"><span class="form-message" id="create-message"></span><button type="button" class="button button-secondary" data-close="create-dialog">Cancel</button><button type="submit" class="button button-primary" id="create-submit">Create task <span>→</span></button></div>
+  </form>
+</dialog>
+
+<dialog class="modal-dialog" id="import-dialog">
+  <form id="import-form" class="modal-card">
+    <div class="modal-heading"><div><span class="eyebrow">BULK INGESTION</span><h2>Import task data</h2><p>Upload a CSV or JSON file. Rows are validated before insertion.</p></div><button type="button" class="icon-button close-dialog" data-close="import-dialog" aria-label="Close">×</button></div>
+    <div class="drop-zone" id="drop-zone"><div class="upload-icon">↑</div><strong>Drop a CSV or JSON file here</strong><span>or <label for="import-file" class="inline-link">browse files</label></span><input type="file" id="import-file" accept=".csv,.json,text/csv,application/json" hidden><small>Maximum 100 records per batch · CSV and JSON arrays supported · <a class="inline-link" href="/sample-tasks.csv" download>download sample CSV</a> · <a class="inline-link" href="/engineering.html#ingestion" target="_blank" rel="noreferrer">view import contract</a></small></div>
+    <div class="import-preview" id="import-preview" hidden><div class="preview-header"><strong id="preview-name">import.csv</strong><span id="preview-count">0 records</span></div><div id="preview-table"></div></div>
+    <div class="modal-footer"><span class="form-message" id="import-message"></span><button type="button" class="button button-secondary" data-close="import-dialog">Cancel</button><button type="submit" class="button button-primary" id="import-submit" disabled>Validate & import</button></div>
+  </form>
+</dialog>
+
+<dialog class="task-dialog" id="task-dialog">
+  <div class="task-detail-shell"><div class="task-detail-head"><div><span class="eyebrow" id="detail-external-id">TASK DETAIL</span><h2 id="detail-title">Task details</h2><div class="detail-meta" id="detail-meta"></div></div><button class="icon-button close-dialog" data-close="task-dialog" aria-label="Close">×</button></div><div class="task-detail-body" id="task-detail-body"><div class="empty-cell">Loading task…</div></div></div>
+</dialog>
+
+<div class="toast-region" id="toast-region" aria-live="polite"></div>
+<div class="help-popover" id="help-popover" hidden><strong>About this demo</strong><p>TaskOps is a portfolio project using synthetic AI data operations records. Human reviews use a versioned, auditable rubric. Optional model-assisted evaluations live in the Quality Workbench and never approve tasks automatically.</p><a href="/api/health" target="_blank" rel="noreferrer">View API health →</a></div>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TaskOps · Team & workspaces</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+:root{color-scheme:dark;--bg:#0b1120;--panel:#121b2c;--line:#26344b;--muted:#93a3bb;--ink:#edf3ff;--blue:#728dff;--good:#52c69b;--bad:#ef8794}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0,#192542 0,transparent 35%),var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:28px 22px 70px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:26px}.brand{font-size:16px;font-weight:800;letter-spacing:.08em}.brand span{color:var(--blue)}a{color:#9eb1ff;text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:30px;line-height:1.15;margin:6px 0}h2{font-size:16px;margin:0 0 6px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#8e9db5;font-weight:700}.sub{color:var(--muted);margin:8px 0 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}.card{background:linear-gradient(145deg,#151f32,#101827);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}.wide{grid-column:1/-1}
+input,select,button{font:inherit}input,select{background:#0d1626;border:1px solid #30405c;color:var(--ink);border-radius:8px;padding:10px;width:100%;min-width:0}label{display:block;font-size:12px;color:#b5c2d7;margin:12px 0 5px}button{border:1px solid #43557a;background:#25375e;color:white;border-radius:8px;padding:9px 13px;cursor:pointer;font-weight:650}button.primary{background:#586fe0;border-color:#7187ff}button.danger{border-color:#69404d;background:#35212c;color:#ffc7cd}button:disabled{opacity:.5;cursor:not-allowed}.row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.row>*{flex:1}.row button{flex:0 0 auto}.note{color:var(--muted);font-size:12px}.notice{padding:10px 12px;border:1px solid #3b4a67;background:#121f34;border-radius:8px;margin:14px 0;color:#c6d4ec;white-space:pre-wrap}.notice.good{border-color:#2b6655;color:#a8efd3}.notice.bad{border-color:#70414d;color:#ffbdc6}.list{display:flex;flex-direction:column;gap:9px;margin-top:14px}.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid #28364c;border-radius:9px;background:#0d1727}.item-main{min-width:0}.item strong{display:block;overflow-wrap:anywhere}.item small{color:var(--muted)}.item-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.item-actions select{width:auto;min-width:130px}.pill{font-size:10px;text-transform:uppercase;letter-spacing:.08em;border:1px solid #465879;border-radius:99px;padding:3px 8px;color:#bdcafa}.empty{padding:22px;text-align:center;border:1px dashed #35435b;border-radius:9px;color:var(--muted)}.hidden{display:none!important}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.item{align-items:flex-start;flex-direction:column}.item-actions{width:100%}.item-actions select{flex:1}}
+:focus-visible{outline:2px solid #8da5ff;outline-offset:3px}
+::selection{background:#627de8;color:#fff}
+body{font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+h1{font-weight:750;letter-spacing:-.045em}
+h2{font-weight:700;letter-spacing:-.025em}
+.brand{font-family:'DM Sans',sans-serif;letter-spacing:-.035em}
+.brand span{color:#8da4ff}
+.card{box-shadow:0 18px 48px rgba(0,0,0,.16);transition:border-color .18s ease,transform .18s ease}
+.card:hover{border-color:#394b69}
+header.top .row{gap:7px}
+header.top .row a{display:inline-flex;align-items:center;justify-content:center;min-height:35px;padding:7px 11px;border:1px solid #2a3a54;border-radius:8px;background:#111b2b;color:#b8c8e2;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;transition:background .18s ease,border-color .18s ease,color .18s ease}
+header.top .row a:hover{background:#1b2a43;border-color:#53698d;color:#fff;text-decoration:none}
+button{transition:transform .14s ease,background .14s ease,border-color .14s ease,box-shadow .14s ease}
+button:hover:not(:disabled){transform:translateY(-1px);border-color:#7188b5}
+button.primary:hover:not(:disabled){background:#6d82f1;box-shadow:0 8px 24px rgba(103,126,242,.2)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#829aff;box-shadow:0 0 0 3px rgba(112,139,255,.14)}
+.item{transition:border-color .16s ease,background .16s ease}
+.item:hover{border-color:#3d5273;background:#101c2f}
+.code,textarea,.token{font-family:'DM Mono',monospace}
+@media(max-width:640px){main{padding:20px 14px 48px}.top{align-items:flex-start;margin-bottom:22px}.top .row{flex-wrap:wrap;justify-content:flex-start;flex-basis:100%!important}.top .row a{font-size:11px;min-height:32px;padding:6px 9px}h1{font-size:26px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body><main>
+<header class="top"><div><div class="brand"><span class="brand-symbol">T</span><span class="brand-word">taskops</span></div><div class="note">Organization administration</div></div><div class="row" style="flex:0 1 340px"><a href="/" style="align-self:center">← Dashboard</a><a href="/evaluations.html" style="align-self:center">Quality</a><a href="/integrations.html" style="align-self:center">Integrations</a></div></header>
+<div class="eyebrow">MILESTONE 2 · COLLABORATION</div><h1>Team & <span>workspaces</span></h1><p class="sub">Manage workspace access, create workspaces, invite reviewers and control organization roles.</p>
+<div id="notice" class="notice hidden"></div>
+<section id="accept-card" class="card hidden" style="margin-top:18px"><h2>Accept organization invitation</h2><p class="note">The invitation is bound to the email address used for your signed-in TaskOps account.</p><button id="accept-invite" class="primary">Accept invitation</button></section>
+<div class="grid">
+<section class="card"><h2>Your workspaces</h2><p class="note">You can switch between workspaces you belong to. Each workspace has isolated tasks, reviewers and quality data.</p><div id="workspace-list" class="list"><div class="empty">Loading workspaces…</div></div>
+<label for="new-workspace">Create workspace (organization owners/admins)</label><div class="row"><input id="new-workspace" placeholder="e.g. Safety Evaluation"><button id="create-workspace" class="primary">Create</button></div></section>
+<section class="card"><h2>Invite a teammate</h2><p class="note">Invitations expire after seven days and can only be accepted by the invited email address.</p>
+<form id="invite-form"><label for="invite-email">Email address</label><input id="invite-email" type="email" required placeholder="reviewer@example.com"><label for="invite-role">Workspace role</label><select id="invite-role"><option value="member">Member</option><option value="reviewer">Reviewer</option><option value="quality_lead">Quality lead</option><option value="auditor">Auditor (read-only)</option></select><div style="margin-top:14px"><button class="primary" type="submit">Send invitation</button></div></form><div id="invite-result"></div></section>
+<section class="card wide"><h2>Organization members</h2><p class="note">Role changes and removal are checked again by database routines. The organization must always keep at least one active owner.</p><div id="member-list" class="list"><div class="empty">Loading members…</div></div></section>
+<section class="card wide"><h2>Members in the active workspace</h2><p class="note">Workspace-specific roles are independent from organization owner/admin/member roles.</p><div id="workspace-member-list" class="list"><div class="empty">Loading workspace members…</div></div></section>
+<section class="card wide"><h2>Reviewer roster</h2><p class="note">Only linked workspace members with Reviewer or Quality Lead roles can submit reviews. Capacity is enforced atomically when tasks are assigned.</p><div id="reviewer-profile-list" class="list"><div class="empty">Loading reviewer profiles…</div></div></section>
+<section class="card wide"><h2>Pending invitations</h2><div id="pending-list" class="list"><div class="empty">Loading invitations…</div></div></section>
+</div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const notice=(msg,type="")=>{const n=$("#notice");n.textContent=msg;n.className="notice "+(type||"");n.classList.remove("hidden");};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function withWorkspace(path){const id=localStorage.getItem("taskops_workspace_id");return id?path+(path.includes("?")?"&":"?")+"workspace_id="+encodeURIComponent(id):path;}
+async function api(path,options={}){const r=await fetch(withWorkspace("/api"+path),{credentials:"same-origin",headers:{"Accept":"application/json",...(options.body?{"Content-Type":"application/json"}:{})},...options});let d={};try{d=await r.json()}catch{}if(!r.ok){if(r.status===401){location.href="/login?next="+encodeURIComponent(location.pathname+location.search)}throw new Error(d.error||("Request failed ("+r.status+")"))}return d;}
+async function loadWorkspaces(){let r=await api("/workspaces");if(!(r.data||[]).length){await api("/overview");r=await api("/workspaces");}const items=r.data||[];const root=$("#workspace-list");if(!items.length){root.innerHTML='<div class="empty">No workspaces are assigned to this account.</div>';return}const active=localStorage.getItem("taskops_workspace_id");root.innerHTML=items.map(w=>'<div class="item"><div class="item-main"><strong>'+esc(w.name)+'</strong><small>'+esc(w.organization_name)+' · '+esc(w.role)+'</small></div><div class="item-actions"><span class="pill">'+(w.id===active?"Active":"Available")+'</span><button data-switch="'+esc(w.id)+'" '+(w.id===active?"disabled":"")+'>'+ (w.id===active?"Current":"Switch")+'</button></div></div>').join("");root.querySelectorAll("[data-switch]").forEach(b=>b.onclick=()=>{localStorage.setItem("taskops_workspace_id",b.dataset.switch);location.reload()});if(!active&&items[0])localStorage.setItem("taskops_workspace_id",items[0].id);}
+let reviewerProfiles=[];
+async function loadReviewerProfiles(){
+ const r=await api("/reviewers");reviewerProfiles=r.data||[];
+ const root=$("#reviewer-profile-list");
+ root.innerHTML=reviewerProfiles.map(v=>'<div class="item"><div class="item-main"><strong>'+esc(v.name)+'</strong><small>'+esc(v.email)+' · '+esc(v.role)+' · '+esc(v.specialty||"General")+' · '+v.open_tasks+' open tasks · '+(v.active?"Active":"Inactive")+'</small></div><div class="item-actions"><input style="width:76px" type="number" min="1" max="100" data-capacity="'+esc(v.id)+'" value="'+v.capacity+'" aria-label="Reviewer capacity"><button data-reviewer-save="'+esc(v.id)+'">Save</button>'+(v.active?'<button class="danger" data-reviewer-disable="'+esc(v.id)+'">Deactivate</button>':'<span class="pill">Inactive</span>')+'</div></div>').join("")||'<div class="empty">No reviewer profiles yet. Invite a teammate with the Reviewer role, then register them here.</div>';
+ root.querySelectorAll("[data-reviewer-save]").forEach(b=>b.onclick=async()=>{try{const id=b.dataset.reviewerSave;const capacity=Number(root.querySelector('[data-capacity="'+id+'"]').value);await api("/reviewers/"+encodeURIComponent(id),{method:"PUT",body:JSON.stringify({capacity})});notice("Reviewer capacity updated.","good");await loadReviewerProfiles()}catch(e){notice(e.message,"bad")}});
+ root.querySelectorAll("[data-reviewer-disable]").forEach(b=>b.onclick=async()=>{if(!confirm("Deactivate this reviewer? Open tasks must be reassigned first."))return;try{await api("/reviewers/"+encodeURIComponent(b.dataset.reviewerDisable),{method:"DELETE"});notice("Reviewer deactivated.","good");await loadReviewerProfiles()}catch(e){notice(e.message,"bad")}});
+}
+async function loadMembers(){
+ const r=await api("/org/members");
+ const root=$("#member-list");
+ const members=r.data||[];
+ const workspaceMembers=r.workspace_members||[];
+ await loadReviewerProfiles();
+ const registered=new Set(reviewerProfiles.filter(v=>v.active).map(v=>String(v.email||"").toLowerCase()));
+ const wsRoot=$("#workspace-member-list");
+ wsRoot.innerHTML=workspaceMembers.map(m=>{
+  const canRegister=m.active&&["reviewer","quality_lead"].includes(m.role)&&m.email&&!registered.has(String(m.email).toLowerCase());
+  return '<div class="item"><div class="item-main"><strong>'+esc(m.email||"Email not recorded")+'</strong><small>'+esc(m.role)+' · '+(m.active?"Active":"Inactive")+'</small></div><div class="item-actions"><select data-ws-role="'+esc(m.id)+'"><option value="owner">Owner</option><option value="admin">Admin</option><option value="member">Member</option><option value="reviewer">Reviewer</option><option value="quality_lead">Quality lead</option><option value="auditor">Auditor</option></select><button data-ws-save="'+esc(m.id)+'">Save workspace role</button>'+(canRegister?'<button data-register-reviewer="'+esc(m.user_id)+'">Register / reactivate reviewer</button>':(registered.has(String(m.email||"").toLowerCase())?'<span class="pill">Reviewer profile</span>':''))+'<button class="danger" data-ws-remove="'+esc(m.id)+'">Remove from workspace</button></div></div>';
+ }).join("")||'<div class="empty">No active workspace members.</div>';
+ workspaceMembers.forEach(m=>{const s=wsRoot.querySelector('[data-ws-role="'+m.id+'"]');if(s)s.value=m.role});
+ wsRoot.querySelectorAll("[data-ws-save]").forEach(b=>b.onclick=async()=>{try{const id=b.dataset.wsSave;await api("/workspaces/members/"+encodeURIComponent(id)+"/role",{method:"POST",body:JSON.stringify({role:wsRoot.querySelector('[data-ws-role="'+id+'"]').value})});notice("Workspace role updated.","good");await loadMembers()}catch(e){notice(e.message,"bad")}});
+ wsRoot.querySelectorAll("[data-register-reviewer]").forEach(b=>b.onclick=async()=>{try{await api("/reviewers",{method:"POST",body:JSON.stringify({user_id:b.dataset.registerReviewer,specialty:"General quality review",capacity:8})});notice("Reviewer profile created for this workspace.","good");await loadMembers()}catch(e){notice(e.message,"bad")}});
+ wsRoot.querySelectorAll("[data-ws-remove]").forEach(b=>b.onclick=async()=>{if(!confirm("Remove this member from the active workspace only? Their organization membership and other workspace access will remain."))return;try{await api("/workspaces/members/"+encodeURIComponent(b.dataset.wsRemove),{method:"DELETE"});notice("Workspace membership removed.","good");await loadMembers();await loadWorkspaces()}catch(e){notice(e.message,"bad")}});
+ if(!members.length){root.innerHTML='<div class="empty">No organization members found.</div>';return}
+ root.innerHTML=members.map(m=>'<div class="item"><div class="item-main"><strong>'+esc(m.email||"Email not recorded")+'</strong><small>Organization role: '+esc(m.role)+' · '+(m.active?"Active":"Inactive")+'</small></div><div class="item-actions"><select data-role="'+esc(m.id)+'"><option value="owner">Owner</option><option value="admin">Admin</option><option value="member">Member</option></select><button data-save="'+esc(m.id)+'">Save organization role</button><button class="danger" data-remove="'+esc(m.id)+'">Remove organization member</button></div></div>').join("");
+ members.forEach(m=>{const s=root.querySelector('[data-role="'+m.id+'"]');if(s)s.value=m.role});
+ root.querySelectorAll("[data-save]").forEach(b=>b.onclick=async()=>{try{const id=b.dataset.save;await api("/org/members/"+encodeURIComponent(id)+"/role",{method:"POST",body:JSON.stringify({role:root.querySelector('[data-role="'+id+'"]').value})});notice("Organization role updated.","good");await loadMembers()}catch(e){notice(e.message,"bad")}});
+ root.querySelectorAll("[data-remove]").forEach(b=>b.onclick=async()=>{if(!confirm("Remove this member from the organization and all of its workspaces?"))return;try{await api("/org/members/"+encodeURIComponent(b.dataset.remove),{method:"DELETE"});notice("Organization membership removed.","good");await loadMembers()}catch(e){notice(e.message,"bad")}});
+}
+async function loadInvites(){const r=await api("/org/invitations");const root=$("#pending-list");const items=r.data||[];if(!items.length){root.innerHTML='<div class="empty">No pending invitations.</div>';return}root.innerHTML=items.map(i=>'<div class="item"><div class="item-main"><strong>'+esc(i.email)+'</strong><small>'+esc(i.role)+' · expires '+new Date(i.expires_at).toLocaleDateString()+'</small></div><div class="item-actions"><button class="danger" data-revoke="'+esc(i.id)+'">Revoke</button></div></div>').join("");root.querySelectorAll("[data-revoke]").forEach(b=>b.onclick=async()=>{try{await api("/org/invitations/"+encodeURIComponent(b.dataset.revoke),{method:"DELETE"});notice("Invitation revoked.","good");await loadInvites()}catch(e){notice(e.message,"bad")}});}
+$("#create-workspace").onclick=async()=>{try{const name=$("#new-workspace").value.trim();const r=await api("/workspaces",{method:"POST",body:JSON.stringify({name})});localStorage.setItem("taskops_workspace_id",r.workspace.id);location.reload()}catch(e){notice(e.message,"bad")}};
+$("#invite-form").onsubmit=async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{const r=await api("/org/invitations",{method:"POST",body:JSON.stringify({email:$("#invite-email").value,role:$("#invite-role").value})});$("#invite-result").innerHTML=r.email_sent?'<div class="notice good">Invitation email sent.</div>':'<div class="notice">Email could not be delivered automatically. Copy this secure invitation link and send it to the recipient:<br><input readonly value="'+esc(r.invite_url)+'" id="invite-link"><button id="copy-invite">Copy link</button><small>'+esc(r.email_error||"")+'</small></div>';const copy=$("#copy-invite");if(copy)copy.onclick=()=>navigator.clipboard?.writeText(r.invite_url);$("#invite-email").value="";await loadInvites()}catch(e){notice(e.message,"bad")}finally{button.disabled=false}};
+const token=new URLSearchParams(location.search).get("invite");
+if(token){$("#accept-card").classList.remove("hidden");$("#accept-invite").onclick=async()=>{try{const r=await api("/org/invitations/accept",{method:"POST",body:JSON.stringify({token})});notice("Invitation accepted. Workspace: "+r.invitation.workspace_name,"good");history.replaceState({},"",location.pathname);localStorage.setItem("taskops_workspace_id",r.invitation.workspace_id);await loadWorkspaces();await loadMembers();await loadInvites()}catch(e){notice(e.message,"bad")}}}
+(async()=>{try{await loadWorkspaces();await Promise.all([loadMembers(),loadInvites()])}catch(e){notice(e.message,"bad")}})();
+</script></body></html>

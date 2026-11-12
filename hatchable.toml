@@ -1,0 +1,27 @@
+[auth]
+enabled = true
+providers = ["email"]
+signup = "open"
+
+[project]
+name = "TaskOps — AI Data Operations Platform"
+
+[ai]
+required = false
+description = "Optional AI judge for quality evaluation. Deterministic validation remains available without a provider connection."
+
+# Membership rows are controlled by server-side routes and membership-aware SQL routines.
+# The route layer supplies authenticated IDs and explicitly scopes every lookup by org/workspace.
+[db.tables.organization_memberships]
+read = "public"
+write = "public"
+
+[db.tables.workspace_memberships]
+read = "public"
+write = "public"
+
+# Reviewer profiles are shared operational records within a workspace.
+# All application handlers filter these rows by the authenticated workspace.
+[db.tables.reviewers]
+read = "public"
+write = "public"

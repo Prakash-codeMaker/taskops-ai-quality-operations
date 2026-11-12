@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TaskOps · Integrations & observability</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+:root{color-scheme:dark;--bg:#0b1120;--panel:#121b2c;--line:#26344b;--muted:#93a3bb;--ink:#edf3ff;--blue:#728dff;--green:#52c69b;--red:#ef8794}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0,#192542 0,transparent 35%),var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+main{max-width:1150px;margin:0 auto;padding:28px 22px 70px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:26px}.brand{font-size:16px;font-weight:850;letter-spacing:.08em}.brand span{color:var(--blue)}a{color:#a7b8ff;text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:30px;line-height:1.1;margin:7px 0}h2{font-size:16px;margin:0 0 6px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#91a0b8;font-weight:800}.sub,.note{color:var(--muted)}.sub{margin:8px 0}.note{font-size:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}.card{background:linear-gradient(145deg,#151f32,#101827);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}.wide{grid-column:1/-1}
+input,select,button{font:inherit}input,select{width:100%;background:#0d1626;border:1px solid #30405c;color:var(--ink);border-radius:8px;padding:10px}label{display:block;font-size:12px;color:#b5c2d7;margin:12px 0 5px}button{border:1px solid #43557a;background:#25375e;color:white;border-radius:8px;padding:9px 13px;cursor:pointer;font-weight:650}button.primary{background:#586fe0;border-color:#7187ff}button.danger{border-color:#69404d;background:#35212c;color:#ffc7cd}button:disabled{opacity:.5;cursor:not-allowed}.row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.row>*{flex:1}.row button{flex:0 0 auto}
+.list{display:flex;flex-direction:column;gap:9px;margin-top:13px}.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid #28364c;border-radius:9px;background:#0d1727}.item small{display:block;color:var(--muted)}.item-main{min-width:0;overflow-wrap:anywhere}.item-actions{display:flex;align-items:center;gap:7px}.pill{font-size:10px;text-transform:uppercase;letter-spacing:.08em;border:1px solid #465879;border-radius:99px;padding:3px 8px;color:#bdcafa}.empty{padding:20px;text-align:center;border:1px dashed #35435b;border-radius:9px;color:var(--muted)}.notice{padding:10px 12px;border:1px solid #3b4a67;background:#121f34;border-radius:8px;margin:14px 0;white-space:pre-wrap;overflow-wrap:anywhere}.notice.good{border-color:#2b6655;color:#a8efd3}.notice.bad{border-color:#70414d;color:#ffbdc6}.token{font:12px ui-monospace,monospace;word-break:break-all;color:#c8d6f1}.code{background:#0a1322;border:1px solid #2b3951;padding:12px;border-radius:9px;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;color:#c9d8f2}.metric{font-size:28px;font-weight:800;margin-top:5px}.hidden{display:none!important}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.item{align-items:flex-start;flex-direction:column}.item-actions{width:100%}}
+:focus-visible{outline:2px solid #8da5ff;outline-offset:3px}
+::selection{background:#627de8;color:#fff}
+body{font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+h1{font-weight:750;letter-spacing:-.045em}
+h2{font-weight:700;letter-spacing:-.025em}
+.brand{font-family:'DM Sans',sans-serif;letter-spacing:-.035em}
+.brand span{color:#8da4ff}
+.card{box-shadow:0 18px 48px rgba(0,0,0,.16);transition:border-color .18s ease,transform .18s ease}
+.card:hover{border-color:#394b69}
+header.top .row{gap:7px}
+header.top .row a{display:inline-flex;align-items:center;justify-content:center;min-height:35px;padding:7px 11px;border:1px solid #2a3a54;border-radius:8px;background:#111b2b;color:#b8c8e2;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;transition:background .18s ease,border-color .18s ease,color .18s ease}
+header.top .row a:hover{background:#1b2a43;border-color:#53698d;color:#fff;text-decoration:none}
+button{transition:transform .14s ease,background .14s ease,border-color .14s ease,box-shadow .14s ease}
+button:hover:not(:disabled){transform:translateY(-1px);border-color:#7188b5}
+button.primary:hover:not(:disabled){background:#6d82f1;box-shadow:0 8px 24px rgba(103,126,242,.2)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#829aff;box-shadow:0 0 0 3px rgba(112,139,255,.14)}
+.item{transition:border-color .16s ease,background .16s ease}
+.item:hover{border-color:#3d5273;background:#101c2f}
+.code,textarea,.token{font-family:'DM Mono',monospace}
+@media(max-width:640px){main{padding:20px 14px 48px}.top{align-items:flex-start;margin-bottom:22px}.top .row{flex-wrap:wrap;justify-content:flex-start;flex-basis:100%!important}.top .row a{font-size:11px;min-height:32px;padding:6px 9px}h1{font-size:26px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style><link rel="stylesheet" href="/theme.css"></head>
+<body><main>
+<header class="top"><div><div class="brand"><span class="brand-symbol">T</span><span class="brand-word">taskops</span></div><div class="note">Integrations & observability</div></div><div class="row" style="flex:0 1 350px"><a href="/">← Dashboard</a><a href="/team.html">Team</a><a href="/evaluations.html">Quality workbench</a></div></header>
+<div class="eyebrow">MILESTONE 4 · INTEGRATIONS & SCALE</div><h1>Connect your <span>AI systems.</span></h1><p class="sub">Issue scoped ingest keys, send OpenTelemetry-compatible spans, inspect agent traces and export workspace data.</p>
+<div id="notice" class="notice hidden"></div>
+<div class="grid">
+<section class="card"><h2>Trace ingestion keys</h2><p class="note">Each key is scoped to the active workspace. The raw token is displayed only once and can be revoked at any time.</p>
+<form id="key-form"><label for="key-name">Integration name</label><input id="key-name" placeholder="Production agent service" required><div style="margin-top:12px"><button class="primary">Create ingest key</button></div></form>
+<div id="new-token" class="hidden"></div><div id="keys" class="list"><div class="empty">Loading keys…</div></div></section>
+<section class="card"><h2>AI evaluation usage</h2><p class="note">Spend attribution is limited to users assigned to this workspace. A provider key is required for AI-judge calls.</p>
+<div class="row"><select id="usage-window"><option value="24h">Last 24 hours</option><option value="7d" selected>Last 7 days</option><option value="30d">Last 30 days</option><option value="mtd">Month to date</option></select><button id="refresh-usage">Refresh</button></div>
+<div class="metric" id="usage-spend">—</div><div class="note" id="usage-calls">Loading usage…</div><p class="note" id="usage-note"></p><a href="https://hatchable.com/console/projects/taskops-ai-data" target="_blank" rel="noreferrer">Open project Setup to connect an AI provider ↗</a></section>
+<section class="card wide"><h2>Send traces from your application</h2><p class="note">Use the returned token in an Authorization header. The receiver accepts <code>spans[]</code> JSON or OTLP JSON <code>resourceSpans</code>. Do not send passwords, API keys, raw prompts or customer PII in span attributes.</p>
+<div class="code" id="snippet">curl -X POST https://taskops-ai-data.hatchable.site/api/ingest/traces \
+  -H "Authorization: Bearer YOUR_TASKOPS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source": "my-agent-service",
+    "spans": [{
+      "trace_id": "trace-001",
+      "span_id": "span-001",
+      "name": "agent.run",
+      "kind": "internal",
+      "status": "ok",
+      "start_time": "2026-11-11T08:00:00Z",
+      "end_time": "2026-11-11T08:00:01Z",
+      "attributes": {
+        "gen_ai.system": "openai",
+        "gen_ai.operation.name": "chat"
+      }
+    }]
+  }'</div><button id="copy-snippet" style="margin-top:10px">Copy example</button></section>
+<section class="card wide"><div class="row" style="align-items:center"><div><h2>Agent trace explorer</h2><p class="note">Recently ingested spans and background batch status.</p></div><button id="refresh-traces">Refresh traces</button></div><div id="batches" class="list"></div><div id="traces" class="list"><div class="empty">Loading traces…</div></div></section>
+<section class="card wide"><h2>Workspace exports</h2><p class="note">Download filtered JSON evidence from the active workspace. Each export is limited to 500 records per request.</p><div class="row"><select id="export-type"><option value="tasks">Tasks</option><option value="evaluations">Evaluation results</option><option value="traces">Agent traces</option></select><select id="export-limit"><option value="100">100 records</option><option value="200" selected>200 records</option><option value="500">500 records</option></select><button id="export">Export JSON</button></div><div id="export-result"></div></section>
+</div></main>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function note(s,type=""){const n=$("#notice");n.textContent=s;n.className="notice "+type;n.classList.remove("hidden")}
+function withWorkspace(p){const w=localStorage.getItem("taskops_workspace_id");return w?p+(p.includes("?")?"&":"?")+"workspace_id="+encodeURIComponent(w):p}
+async function api(p,o={}){const r=await fetch(withWorkspace("/api"+p),{credentials:"same-origin",headers:{"Accept":"application/json",...(o.body?{"Content-Type":"application/json"}:{})},...o});let d={};try{d=await r.json()}catch{}if(!r.ok){if(r.status===401)location.href="/login?next="+encodeURIComponent(location.pathname+location.search);throw new Error(d.error||("Request failed ("+r.status+")"))}return d}
+async function loadKeys(){const r=await api("/integrations/keys");const root=$("#keys");root.innerHTML=(r.data||[]).map(k=>'<div class="item"><div class="item-main"><strong>'+esc(k.name)+'</strong><small>'+esc(k.token_prefix)+'… · '+(k.is_active?"Active":"Revoked")+' · last used '+esc(k.last_used_at?new Date(k.last_used_at).toLocaleString():"never")+'</small></div><div class="item-actions">'+(k.is_active?'<button class="danger" data-revoke="'+esc(k.id)+'">Revoke</button>':'<span class="pill">Revoked</span>')+'</div></div>').join("")||'<div class="empty">No integration keys yet.</div>';root.querySelectorAll("[data-revoke]").forEach(b=>b.onclick=async()=>{if(!confirm("Revoke this token? External senders will stop authenticating."))return;try{await api("/integrations/keys/"+b.dataset.revoke,{method:"DELETE"});note("Integration key revoked.","good");await loadKeys()}catch(e){note(e.message,"bad")}})}
+async function loadUsage(){try{const u=await api("/analytics/ai-usage?window="+$("#usage-window").value);$("#usage-spend").textContent="$"+Number(u.totals.cost_usd||0).toFixed(4);$("#usage-calls").textContent=Number(u.totals.calls||0).toLocaleString()+" AI calls · "+Number(u.totals.unpriced_calls||0)+" unpriced";$("#usage-note").textContent=u.totals.cost_is_complete?"Priced usage for active workspace members.":"Some workspace calls are not priced yet; shown spend may be a lower bound."}catch(e){$("#usage-spend").textContent="—";$("#usage-calls").textContent=e.message;$("#usage-note").textContent="Connect an AI provider and run evaluations to populate this view."}}
+async function loadTraces(){const r=await api("/traces?limit=50");$("#batches").innerHTML=(r.batches||[]).map(b=>'<div class="item"><span><strong>Ingest batch · '+esc(b.source)+'</strong><small>'+b.span_count+' spans · '+new Date(b.received_at).toLocaleString()+'</small></span><span class="pill">'+esc(b.status)+' · '+b.stored_count+' stored</span></div>').join("")||'<div class="note">No trace batches yet.</div>';$("#traces").innerHTML=(r.data||[]).map(t=>'<div class="item"><div class="item-main"><strong>'+esc(t.name)+'</strong><small>'+esc(t.trace_id)+' / '+esc(t.span_id)+' · '+esc(t.kind||"span")+' · '+esc(t.status||"unknown")+'</small></div><span class="pill">'+(t.duration_ms==null?"—":Number(t.duration_ms).toFixed(1)+" ms")+'</span></div>').join("")||'<div class="empty">No spans stored in this workspace.</div>'}
+$("#key-form").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const r=await api("/integrations/keys",{method:"POST",body:JSON.stringify({name:$("#key-name").value})});$("#new-token").classList.remove("hidden");$("#new-token").innerHTML='<div class="notice good"><strong>Copy this token now. It will not be shown again.</strong><p class="token">'+esc(r.token)+'</p><button id="copy-token">Copy token</button></div>';$("#copy-token").onclick=()=>navigator.clipboard?.writeText(r.token);$("#key-name").value="";note("Integration key created.","good");await loadKeys()}catch(e){note(e.message,"bad")}finally{b.disabled=false}};
+$("#refresh-usage").onclick=loadUsage;$("#usage-window").onchange=loadUsage;$("#refresh-traces").onclick=async()=>{try{await loadTraces()}catch(e){note(e.message,"bad")}};$("#copy-snippet").onclick=()=>navigator.clipboard?.writeText($("#snippet").textContent);
+$("#export").onclick=async()=>{try{const r=await api("/exports?resource="+$("#export-type").value+"&limit="+$("#export-limit").value);const blob=new Blob([JSON.stringify(r,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="taskops-"+r.resource+"-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(url);$("#export-result").textContent="Exported "+r.count+" records."}catch(e){note(e.message,"bad")}};
+(async()=>{try{await Promise.all([loadKeys(),loadUsage(),loadTraces()])}catch(e){note(e.message,"bad")}})();
+</script></body></html>

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b110f">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Sign in · TaskOps</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1120;--panel:#121d30;--border:#2a3a53;--text:#e8edf7;--muted:#8c9ab0;--blue:#849aff;--sans:Inter,system-ui,sans-serif}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 15% 0%,#223455 0,transparent 45%),var(--bg);color:var(--text);font-family:var(--sans);display:grid;place-items:center;padding:22px}
+    .shell{width:100%;max-width:420px}.brand{display:flex;align-items:center;gap:10px;margin:0 auto 24px;width:max-content}.brand-mark{height:37px;width:37px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,#7891ff,#8c6df2);font-weight:800;font-size:19px}.brand-copy{display:grid;gap:2px}.brand-copy strong{font-size:17px;letter-spacing:-.5px}.brand-copy small{font:9px ui-monospace,monospace;letter-spacing:1.2px;color:#8999b4}
+    .card{padding:27px;border:1px solid #30405a;border-radius:17px;background:linear-gradient(145deg,#152238f5,#101a2bf5);box-shadow:0 25px 80px #0007}.eyebrow{font:9px ui-monospace,monospace;letter-spacing:1.3px;color:#90a5c8}.title{font-size:24px;letter-spacing:-.8px;margin:9px 0}.sub{font-size:12px;line-height:1.6;color:var(--muted);margin:0 0 24px}
+    label{display:block;font-size:10px;font-weight:600;color:#b6c4d8;margin:0 0 7px}input{width:100%;height:44px;border:1px solid #354660;border-radius:8px;background:#0e192a;padding:0 12px;color:#edf2fa;outline:none;font:12px var(--sans)}input:focus{border-color:#91a5ff;box-shadow:0 0 0 3px #8198ff22}input::placeholder{color:#65758d}.button{width:100%;height:43px;margin-top:12px;border:1px solid transparent;border-radius:8px;background:#849aff;color:#0d1730;font-weight:750;font-size:12px;cursor:pointer}.button:disabled{opacity:.55;cursor:wait}.button.secondary{background:transparent;border-color:#354660;color:#bbc8dc}.button.text{background:transparent;color:#96a9ff;border:0;height:34px;margin-top:3px}.message{font-size:10px;min-height:17px;line-height:1.5;color:#8fa1ba;margin-top:12px}.message.error{color:#ff9aa9}.fine{font-size:9px;text-align:center;color:#65758d;margin:17px 0 0}.passkey-info{padding:13px;border:1px solid #35476a;background:#1a2945;border-radius:9px;margin:18px 0 5px;font-size:11px;line-height:1.5;color:#bdc9e0}.passkey-info strong{display:block;color:#e2e9f8;margin-bottom:4px}.back{margin-top:9px}.hidden{display:none!important}.back-link{display:block;text-align:center;color:#91a5cf;font-size:10px;margin-top:17px}
+  </style>
+  <link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+  <main class="shell">
+    <a class="brand" href="/"><span class="brand-mark">T·</span><span class="brand-copy"><strong>taskops</strong><small>DATA OPERATIONS</small></span></a>
+    <section class="card">
+      <div class="eyebrow">SECURE WORKSPACE ACCESS</div>
+      <h1 class="title" id="title">Sign in to TaskOps</h1>
+      <p class="sub" id="sub">Use your email to receive a one-time sign-in code. No password required.</p>
+      <form id="login-form" novalidate>
+        <div id="email-step">
+          <label for="email">Work or personal email</label>
+          <input id="email" type="email" required autocomplete="username webauthn" autocapitalize="off" spellcheck="false" placeholder="you@example.com">
+        </div>
+        <div id="code-step" class="hidden">
+          <label for="code">Six-digit verification code</label>
+          <input id="code" type="text" required inputmode="numeric" maxlength="6" pattern="[0-9]*" autocomplete="one-time-code" placeholder="000000">
+        </div>
+        <button class="button" id="submit" type="submit">Continue with email</button>
+        <button class="button text hidden" id="back" type="button">Use a different email</button>
+      </form>
+      <div id="passkey-step" class="hidden">
+        <div class="passkey-info"><strong>Make your next sign-in faster</strong>Add a passkey to sign in with your fingerprint, face, or device screen lock.</div>
+        <button class="button" id="add-passkey" type="button">Add a passkey</button>
+        <button class="button secondary" id="skip-passkey" type="button">Not now</button>
+      </div>
+      <p class="message" id="message" role="status" aria-live="polite"></p>
+      <p class="fine">TaskOps demo · Synthetic data only · Secure passwordless access</p>
+    </section>
+    <a class="back-link" href="/">← Back to TaskOps overview</a>
+  </main>
+<script>
+(function(){
+  const auth=window.hatchable&&window.hatchable.auth;
+  const $=id=>document.getElementById(id);
+  const email=$("email"),code=$("code"),form=$("login-form"),message=$("message"),submit=$("submit");
+  const emailStep=$("email-step"),codeStep=$("code-step"),passkeyStep=$("passkey-step");
+  let step="email",hasPasskey=false;
+  const declinedKey="taskops_passkey_offer_declined";
+  function safeNext(){
+    const raw=new URLSearchParams(location.search).get("next")||"/";
+    if(typeof raw!=="string"||raw[0]!=="/"||raw[1]==="/")return "/";
+    for(let i=0;i<raw.length;i++){const c=raw.charCodeAt(i);if(c<32||c===92||c===127)return "/";}
+    return raw;
+  }
+  function go(){location.replace(safeNext());}
+  function say(text,error=false){message.textContent=text||"";message.className="message"+(error?" error":"");}
+  function setBusy(value){submit.disabled=value;submit.textContent=value?"Please wait…":(step==="email"?"Continue with email":"Verify & sign in");}
+  function showPasskey(){
+    step="passkey";form.classList.add("hidden");passkeyStep.classList.remove("hidden");
+    $("title").textContent="You're signed in";$("sub").textContent="Add a passkey for faster, passwordless access next time.";say("");
+    $("add-passkey").focus();
+  }
+  if(!auth){say("Authentication service is unavailable. Refresh and try again.",true);submit.disabled=true;return;}
+  window.hatchable.auth.getSession().then(s=>{if(s&&s.user)go();}).catch(()=>{});
+  if(auth.attachPasskeyAutofill){try{auth.attachPasskeyAutofill(email).then(r=>{if(r&&r.user)go();}).catch(()=>{});}catch(e){}}
+  $("back").addEventListener("click",()=>{
+    step="email";emailStep.classList.remove("hidden");codeStep.classList.add("hidden");$("back").classList.add("hidden");
+    $("sub").textContent="Use your email to receive a one-time sign-in code. No password required.";say("");setBusy(false);email.focus();
+  });
+  form.addEventListener("submit",async event=>{
+    event.preventDefault();setBusy(true);
+    try{
+      if(step==="email"){
+        const address=email.value.trim();if(!address){say("Enter a valid email address.",true);setBusy(false);return;}
+        const result=await auth.startLogin({email:address});hasPasskey=!!(result&&result.has_passkey);
+        if(hasPasskey&&auth.supportsPasskeys&&auth.supportsPasskeys()){
+          try{const signed=await auth.signInWithPasskey({email:address});if(signed&&signed.user){go();return;}}catch(e){}
+        }
+        step="code";emailStep.classList.add("hidden");codeStep.classList.remove("hidden");$("back").classList.remove("hidden");
+        $("sub").textContent="Enter the code sent to "+address+". Check your inbox.";say("Code sent. Check your email.");code.focus();
+      }else if(step==="code"){
+        const signed=await auth.verifyCode({email:email.value.trim(),code:code.value.trim()});
+        if(!signed||!signed.user)throw new Error("The code could not be verified.");
+        let alreadyDeclined=false;try{alreadyDeclined=localStorage.getItem(declinedKey)==="1";}catch(e){}
+        if(!hasPasskey&&!alreadyDeclined&&auth.supportsPasskeys&&auth.supportsPasskeys())showPasskey();else go();
+      }
+    }catch(error){say(error&&error.status===429?"Too many attempts. Wait briefly before trying again.":(error.message||"Sign-in failed. Check your details and try again."),true);}
+    finally{if(step!=="passkey")setBusy(false);}
+  });
+  $("add-passkey").addEventListener("click",async()=>{
+    $("add-passkey").disabled=true;$("skip-passkey").disabled=true;
+    try{const result=await auth.registerPasskey({name:"TaskOps device"});if(!result){try{localStorage.setItem(declinedKey,"1");}catch(e){}}go();}
+    catch(error){say(error.message||"Passkey setup failed. You can continue without one.",true);$("add-passkey").disabled=false;$("skip-passkey").disabled=false;}
+  });
+  $("skip-passkey").addEventListener("click",()=>{try{localStorage.setItem(declinedKey,"1");}catch(e){}go();});
+  email.focus();
+})();
+</script>
+</body>
+</html>
